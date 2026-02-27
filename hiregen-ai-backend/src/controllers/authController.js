@@ -4,28 +4,28 @@ import db from '../database/models/index.js';
 
 const { User } = db;
 
+// backend/controllers/auth.controller.js
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+    // ... validation ...
+    const user = await User.create({ name, email, password: hashedPassword });
 
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
+    // 🍪 Registration ke turant baad Token banao
+    const token = jwt.sign({ id: user.id, email: user.email }, "secretkey", { expiresIn: "1d" });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword
+    // Cookie set karo
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'Lax',
+      maxAge: 24 * 60 * 60 * 1000 
     });
 
     res.status(201).json({
-      message: "User registered successfully",
-      user
+      message: "User registered and logged in successfully",
+      user: { id: user.id, name: user.name, email: user.email }
     });
-
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -47,29 +47,65 @@ export const login = async (req, res) => {
 
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      "secretkey",
+      process.env.JWT_SECRET || "secretkey", // Best practice: use env variable
       { expiresIn: "1d" }
     );
 
+    // 🍪 Setting Token in Cookie
+    const cookieOptions = {
+      httpOnly: true, // Frontend JS can't access this (Secure from XSS)
+      secure: process.env.NODE_ENV === 'production', 
+      sameSite: 'Lax', // Protects against CSRF
+      maxAge: 24 * 60 * 60 * 1000 // 1 day
+    };
+
+    res.cookie('token', token, cookieOptions);
+
     res.status(200).json({
       message: "Login successful",
-      token
+      user: { id: user.id, name: user.name, email: user.email }
     });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-// 🔹 LOGOUT (JWT based)
-// Frontend can simply delete the token from client storage
+
+// 🔹 LOGOUT (Clearing Cookie)
 export const logout = (req, res) => {
-  const {token} = req.cookies;
-  if(!token){
-   return res.status(400).json({
-      success:false,
-      message:"Invalid or expire tokend"
-    })
+  const { token } = req.cookies;
+
+  if (!token) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid or expired token"
+    });
   }
- 
-  res.json({ message: "Logout successful" });
+
+  // 🧹 Cookie ko clear karo
+  res.cookie('token', '', {
+    httpOnly: true,
+    expires: new Date(0), // Set expiration to past
+    sameSite: 'Lax'
+  });
+
+  return res.status(200).json({ 
+    success: true, 
+    message: "Logout successful" 
+  });
+};
+export const getMe = async (req, res) => {
+  try {
+    const token = req.cookies.token; // Cookie se token uthaya
+    if (!token) return res.status(401).json({ authenticated: false });
+
+    const decoded = jwt.verify(token, "secretkey");
+    const user = await User.findByPk(decoded.id, {
+      attributes: ['id', 'name', 'email']
+    });
+
+    res.status(200).json({ authenticated: true, user });
+  } catch (error) {
+    res.status(401).json({ authenticated: false });
+  }
 };

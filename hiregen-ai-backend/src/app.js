@@ -1,9 +1,32 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from "cookie-parser";
+
 const app = express();
 
-app.use(cors());
+// ✅ CORS Config: Frontend URL Nagpur production/local ke hisab se set karein
+const allowedOrigins = [
+  'http://localhost:5173', // Vite default local
+  'http://localhost:3000', // React default local
+  'https://your-production-url.com' // Aapki deployed site ka URL
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // 👈 Ye sabse important hai cookies/token ke liye
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); 
