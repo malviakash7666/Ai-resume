@@ -6,9 +6,10 @@ const app = express();
 
 // ✅ CORS Config: Frontend URL Nagpur production/local ke hisab se set karein
 const allowedOrigins = [
-  'http://localhost:5173', // Vite default local
-  'http://localhost:3000', // React default local
-  'https://your-production-url.com' // Aapki deployed site ka URL
+  process.env.FRONTEND_URL,
+  process.env.BACKEND_URL,
+
+ 
 ];
 
 app.use(cors({

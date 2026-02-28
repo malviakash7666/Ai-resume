@@ -11,6 +11,7 @@ import {
   Search
 } from "lucide-react";
 
+
 export const Dashboard = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
