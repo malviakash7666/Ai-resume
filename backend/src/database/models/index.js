@@ -95,6 +95,8 @@ db.Sequelize = Sequelize;
 
 export const {
   User,
+  profile,
+  Resume
  
 } = db;
 

@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import db from '../database/models/index.js';
-
+import generateToken from "../utils/generateToken.js";
 const { User } = db;
 
 // backend/controllers/auth.controller.js
@@ -12,8 +12,7 @@ export const register = async (req, res) => {
     const user = await User.create({ name, email, password: hashedPassword });
 
     // 🍪 Registration ke turant baad Token banao
-    const token = jwt.sign({ id: user.id, email: user.email }, "secretkey", { expiresIn: "1d" });
-
+const token = generateToken(user);
     // Cookie set karo
     res.cookie('token', token, {
       httpOnly: true,
@@ -45,12 +44,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET || "secretkey", // Best practice: use env variable
-      { expiresIn: "1d" }
-    );
-
+   const token = generateToken(user);
     // 🍪 Setting Token in Cookie
     const cookieOptions = {
       httpOnly: true, // Frontend JS can't access this (Secure from XSS)
@@ -96,16 +90,12 @@ export const logout = (req, res) => {
 };
 export const getMe = async (req, res) => {
   try {
-    const token = req.cookies.token; // Cookie se token uthaya
-    if (!token) return res.status(401).json({ authenticated: false });
-
-    const decoded = jwt.verify(token, "secretkey");
-    const user = await User.findByPk(decoded.id, {
+    const user = await User.findByPk(req.user.id, {
       attributes: ['id', 'name', 'email']
     });
 
     res.status(200).json({ authenticated: true, user });
   } catch (error) {
-    res.status(401).json({ authenticated: false });
+    res.status(500).json({ message: "Server error" });
   }
 };

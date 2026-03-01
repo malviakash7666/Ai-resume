@@ -2,6 +2,7 @@
 import app from './app.js';
 import db from './database/models/index.js';
 import authRoutes from './routes/auth.routes.js'
+import profileRoutes from './routes/profile.routes.js'
 
 
 
@@ -26,5 +27,6 @@ const startServer = async () => {
 };
 
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
 
 startServer();

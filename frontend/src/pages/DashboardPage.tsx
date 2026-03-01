@@ -8,9 +8,11 @@ import {
   UploadCloud, 
   History, 
   Sparkles,
-  Search
+  Search,
+  Settings,
+  ChevronRight
 } from "lucide-react";
-
+import { ProfilePage } from "../components/ProfilePage";
 
 export const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -62,19 +64,34 @@ export const Dashboard = () => {
           >
             <History size={18} /> Test History
           </button>
+
+          {/* Profile Button in Nav */}
+          <button 
+            onClick={() => setActiveTab("profile")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+              activeTab === "profile" ? "bg-indigo-50 text-indigo-600" : "text-slate-400 hover:bg-slate-50"
+            }`}
+          >
+            <UserIcon size={18} /> My Profile
+          </button>
         </nav>
 
         {/* --- USER SECTION --- */}
         <div className="p-4 border-t border-slate-100">
-          <div className="flex items-center gap-3 px-2 mb-4">
-            <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs">
+          <button 
+            onClick={() => setActiveTab("profile")}
+            className="w-full flex items-center gap-3 px-2 py-3 mb-2 rounded-xl hover:bg-slate-50 transition-all group"
+          >
+            <div className="h-9 w-9 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs group-hover:bg-indigo-600 group-hover:text-white transition-colors">
               {user?.name?.charAt(0) || "A"}
             </div>
-            <div className="overflow-hidden">
+            <div className="overflow-hidden text-left flex-1">
               <p className="text-xs font-bold truncate text-slate-800">{user?.name || "Akash Malvi"}</p>
-              <p className="text-[10px] text-slate-400 truncate">Free Plan</p>
+              <p className="text-[10px] text-slate-400 truncate">View Profile</p>
             </div>
-          </div>
+            <ChevronRight size={14} className="text-slate-300 group-hover:text-indigo-600" />
+          </button>
+          
           <button 
             onClick={logout}
             className="w-full flex items-center justify-center gap-2 py-2 text-[11px] font-bold text-slate-400 hover:text-red-500 transition-colors"
@@ -88,8 +105,19 @@ export const Dashboard = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8">
           <h2 className="font-bold text-slate-800 capitalize">{activeTab}</h2>
-          <div className="bg-emerald-50 text-emerald-600 text-[10px] font-black px-3 py-1 rounded-full border border-emerald-100 uppercase">
-            AI Scoring: Live
+          
+          <div className="flex items-center gap-4">
+            <div className="bg-emerald-50 text-emerald-600 text-[10px] font-black px-3 py-1 rounded-full border border-emerald-100 uppercase">
+              AI Scoring: Live
+            </div>
+            {/* Quick Profile Icon in Header */}
+            <button 
+              onClick={() => setActiveTab("profile")}
+              className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+              title="Profile Settings"
+            >
+              <Settings size={20} />
+            </button>
           </div>
         </header>
 
@@ -174,6 +202,10 @@ export const Dashboard = () => {
               </div>
             </div>
           )}
+
+        {activeTab === "profile" && (
+  <ProfilePage /> 
+)}
         </main>
       </div>
     </div>
